@@ -1,0 +1,46 @@
+{
+  "system_name": "Cross-Border Payments Platform - Tier 1 Retail Bank",
+  "crqc_horizon_years": 15,
+  "assets": [
+    {
+      "asset_id": "FS-01",
+      "name": "ECDH-P384",
+      "role": "key_exchange",
+      "location": "SWIFT messaging gateway, ephemeral session key exchange",
+      "data_sensitivity_years": 10,
+      "migration_timeline_years": 4,
+      "sector": "financial_services",
+      "notes": "Forward secrecy is a hard requirement for SWIFT traffic per the customer security programme."
+    },
+    {
+      "asset_id": "FS-02",
+      "name": "ECDSA-P256",
+      "role": "signature",
+      "location": "SWIFT messaging gateway, message integrity signature",
+      "data_sensitivity_years": 10,
+      "migration_timeline_years": 4,
+      "sector": "financial_services",
+      "notes": "Signs outgoing SWIFT MT/MX messages for integrity and non-repudiation."
+    },
+    {
+      "asset_id": "FS-03",
+      "name": "RSA-2048",
+      "role": "signature",
+      "location": "Cardholder data environment, payment gateway TLS certificate",
+      "data_sensitivity_years": 7,
+      "migration_timeline_years": 2,
+      "sector": "financial_services",
+      "notes": "In scope for PCI DSS 4.0. Standard server certificate, straightforward rotation path."
+    },
+    {
+      "asset_id": "FS-04",
+      "name": "AES-256-GCM",
+      "role": "symmetric_encryption",
+      "location": "Cardholder data environment, PAN encryption at rest",
+      "data_sensitivity_years": 7,
+      "migration_timeline_years": 2,
+      "sector": "financial_services",
+      "notes": "Already at a 256-bit key size; included to demonstrate the framework correctly identifies assets that need no further change."
+    }
+  ]
+}

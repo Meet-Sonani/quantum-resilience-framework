@@ -1,0 +1,46 @@
+{
+  "system_name": "Substation Automation Network - Regional Grid Operator",
+  "crqc_horizon_years": 15,
+  "assets": [
+    {
+      "asset_id": "SS-01",
+      "name": "None - cleartext Modbus TCP",
+      "role": "other",
+      "location": "Modbus TCP link, RTU-to-substation-gateway telemetry",
+      "data_sensitivity_years": 15,
+      "migration_timeline_years": 8,
+      "sector": "ics_scada",
+      "notes": "Legacy protocol, no cryptographic layer at all - flagged for the sector module."
+    },
+    {
+      "asset_id": "SS-02",
+      "name": "AES-128-CBC",
+      "role": "symmetric_encryption",
+      "location": "DNP3 Secure Authentication v5 payload encryption, substation gateway",
+      "data_sensitivity_years": 15,
+      "migration_timeline_years": 5,
+      "sector": "ics_scada",
+      "notes": "Wraps DNP3 SAv5 challenge-response payloads between the gateway and the control centre."
+    },
+    {
+      "asset_id": "SS-03",
+      "name": "ECDSA-P256",
+      "role": "signature",
+      "location": "PLC firmware update signature verification, real-time control loop",
+      "data_sensitivity_years": 15,
+      "migration_timeline_years": 8,
+      "sector": "ics_scada",
+      "notes": "Root-of-trust for PLC firmware; verification happens during a bounded maintenance window, not the control loop itself, but the PLC's crypto library is shared with in-loop operations."
+    },
+    {
+      "asset_id": "SS-04",
+      "name": "RSA-2048",
+      "role": "key_exchange",
+      "location": "Process control HMI remote access VPN, control centre gateway",
+      "data_sensitivity_years": 10,
+      "migration_timeline_years": 3,
+      "sector": "ics_scada",
+      "notes": "Standard IT-side VPN gateway, not embedded in the real-time control loop - easier migration path than SS-01 to SS-03."
+    }
+  ]
+}
