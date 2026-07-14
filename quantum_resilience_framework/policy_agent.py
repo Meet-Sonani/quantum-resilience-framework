@@ -53,6 +53,23 @@ preamble - with exactly these keys:
 
 _MODEL = "claude-sonnet-4-6"
 
+# The system prompt explicitly asks for open-ended chain-of-thought reasoning
+# in "analysis" before the recommendations list. 2000 tokens was found to be
+# too tight for that in practice - a real inventory with several assets can
+# produce a genuinely long analysis, and a response cut off mid-string is
+# invalid JSON. 4096 gives real headroom without being wasteful.
+_MAX_TOKENS = 4096
+
+
+class PolicyBriefingError(Exception):
+    """
+    Raised when the policy agent's response could not be turned into a usable
+    briefing - either the model's response was truncated before it finished
+    (stop_reason == "max_tokens"), or the completed response was not valid
+    JSON. Both cases carry the raw response text so the caller can inspect
+    what the model actually said rather than losing it to a bare traceback.
+    """
+
 
 def _inventory_to_context(inventory: Inventory) -> str:
     """Serialise the already-processed inventory into the JSON the agent reasons over."""
@@ -78,7 +95,7 @@ def build_request(inventory: Inventory) -> dict[str, Any]:
     """
     return {
         "model": _MODEL,
-        "max_tokens": 2000,
+        "max_tokens": _MAX_TOKENS,
         "system": SYSTEM_PROMPT,
         "messages": [
             {"role": "user", "content": _inventory_to_context(inventory)},
@@ -108,8 +125,27 @@ def generate_policy_briefing(inventory: Inventory, client: Any) -> dict[str, Any
     `client` is an already-constructed `anthropic.Anthropic()` instance - it
     is passed in rather than created here so tests can substitute a fake
     client without touching the network or requiring an API key.
+
+    Raises PolicyBriefingError (rather than letting a bare JSONDecodeError or
+    KeyError propagate) if the response was truncated or was not valid JSON,
+    always including the raw response text so nothing is silently lost.
     """
     request = build_request(inventory)
     response = client.messages.create(**request)
     raw_text = "".join(block.text for block in response.content if block.type == "text")
-    return parse_response(raw_text)
+
+    if getattr(response, "stop_reason", None) == "max_tokens":
+        raise PolicyBriefingError(
+            f"The model's response was cut off before it finished (hit the "
+            f"{_MAX_TOKENS}-token limit). Try again, or increase _MAX_TOKENS "
+            f"in policy_agent.py if this keeps happening.\n\n"
+            f"Raw (truncated) response:\n{raw_text}"
+        )
+
+    try:
+        return parse_response(raw_text)
+    except json.JSONDecodeError as exc:
+        raise PolicyBriefingError(
+            f"Could not parse the model's response as JSON ({exc}).\n\n"
+            f"Raw response:\n{raw_text}"
+        ) from exc

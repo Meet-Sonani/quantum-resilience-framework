@@ -1,8 +1,15 @@
 import json
 from dataclasses import dataclass
 
+import pytest
+
 from quantum_resilience_framework.models import AssetRole, CryptoAsset, Inventory, QuantumVulnerability
-from quantum_resilience_framework.policy_agent import build_request, generate_policy_briefing, parse_response
+from quantum_resilience_framework.policy_agent import (
+    PolicyBriefingError,
+    build_request,
+    generate_policy_briefing,
+    parse_response,
+)
 
 
 def _sample_inventory() -> Inventory:
@@ -48,23 +55,25 @@ class _FakeTextBlock:
 
 
 class _FakeResponse:
-    def __init__(self, text: str):
+    def __init__(self, text: str, stop_reason: str = "end_turn"):
         self.content = [_FakeTextBlock(type="text", text=text)]
+        self.stop_reason = stop_reason
 
 
 class _FakeMessages:
-    def __init__(self, response_text: str):
+    def __init__(self, response_text: str, stop_reason: str = "end_turn"):
         self._response_text = response_text
+        self._stop_reason = stop_reason
         self.last_request = None
 
     def create(self, **kwargs):
         self.last_request = kwargs
-        return _FakeResponse(self._response_text)
+        return _FakeResponse(self._response_text, self._stop_reason)
 
 
 class _FakeClient:
-    def __init__(self, response_text: str):
-        self.messages = _FakeMessages(response_text)
+    def __init__(self, response_text: str, stop_reason: str = "end_turn"):
+        self.messages = _FakeMessages(response_text, stop_reason)
 
 
 def test_generate_policy_briefing_uses_injected_client_and_parses_result():
@@ -80,3 +89,21 @@ def test_generate_policy_briefing_uses_injected_client_and_parses_result():
 
     assert result["recommendations"][0]["asset_id"] == "T-01"
     assert client.messages.last_request["model"] == "claude-sonnet-4-6"
+
+
+def test_generate_policy_briefing_raises_clear_error_on_truncation():
+    # A response cut off mid-string, with stop_reason reporting max_tokens -
+    # this is exactly the failure mode a live API call hit in practice.
+    truncated_text = '{"analysis": "This inventory needs careful review because'
+    client = _FakeClient(truncated_text, stop_reason="max_tokens")
+
+    with pytest.raises(PolicyBriefingError, match="cut off"):
+        generate_policy_briefing(_sample_inventory(), client)
+
+
+def test_generate_policy_briefing_raises_clear_error_on_invalid_json():
+    # Not truncated (stop_reason is end_turn), but still not valid JSON.
+    client = _FakeClient("this is not json at all", stop_reason="end_turn")
+
+    with pytest.raises(PolicyBriefingError, match="Could not parse"):
+        generate_policy_briefing(_sample_inventory(), client)

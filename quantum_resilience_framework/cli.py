@@ -39,12 +39,17 @@ def assess(inventory_path, crqc_horizon, output, policy_briefing):
         # imported lazily so `anthropic` is only required when this flag is used
         import anthropic
 
-        from .policy_agent import generate_policy_briefing
+        from .policy_agent import PolicyBriefingError, generate_policy_briefing
 
         client = anthropic.Anthropic()
-        briefing = generate_policy_briefing(inventory, client)
-
         briefing_path = output.rsplit(".", 1)[0] + "-policy-briefing.json"
+
+        try:
+            briefing = generate_policy_briefing(inventory, client)
+        except PolicyBriefingError as exc:
+            click.echo(f"Policy briefing failed: {exc}", err=True)
+            raise SystemExit(1)
+
         with open(briefing_path, "w", encoding="utf-8") as f:
             json.dump(briefing, f, indent=2)
 
@@ -53,4 +58,3 @@ def assess(inventory_path, crqc_horizon, output, policy_briefing):
 
 if __name__ == "__main__":
     assess()
-
