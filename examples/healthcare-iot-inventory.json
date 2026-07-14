@@ -1,0 +1,46 @@
+{
+  "system_name": "CardioLink Implantable Pacemaker Telemetry System",
+  "crqc_horizon_years": 15,
+  "assets": [
+    {
+      "asset_id": "CL-01",
+      "name": "ECDH-P256",
+      "role": "key_exchange",
+      "location": "Pacemaker implant firmware, telemetry session key establishment",
+      "data_sensitivity_years": 20,
+      "migration_timeline_years": 6,
+      "sector": "healthcare_iot",
+      "notes": "Firmware is field-updatable only via clinic visit; devices are implanted for 8-12 years."
+    },
+    {
+      "asset_id": "CL-02",
+      "name": "ECDSA-P256",
+      "role": "signature",
+      "location": "Pacemaker implant firmware, firmware update signature verification",
+      "data_sensitivity_years": 20,
+      "migration_timeline_years": 6,
+      "sector": "healthcare_iot",
+      "notes": "Root-of-trust signature for firmware authenticity."
+    },
+    {
+      "asset_id": "CL-03",
+      "name": "AES-128-GCM",
+      "role": "symmetric_encryption",
+      "location": "Pacemaker implant firmware, telemetry payload encryption",
+      "data_sensitivity_years": 20,
+      "migration_timeline_years": 6,
+      "sector": "healthcare_iot",
+      "notes": "Encrypts cardiac event logs transmitted to the clinic gateway."
+    },
+    {
+      "asset_id": "CL-04",
+      "name": "RSA-2048",
+      "role": "signature",
+      "location": "Clinic gateway server, TLS certificate for remote monitoring portal",
+      "data_sensitivity_years": 10,
+      "migration_timeline_years": 2,
+      "sector": "healthcare_iot",
+      "notes": "Standard server, easier migration path than the implant firmware."
+    }
+  ]
+}

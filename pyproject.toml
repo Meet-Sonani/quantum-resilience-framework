@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-resilience-framework"
+version = "0.1.0"
+description = "Assess quantum vulnerability across a cryptographic asset inventory and produce a prioritised PQC migration report."
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+qrf = "quantum_resilience_framework.cli:assess"
+
+[project.optional-dependencies]
+llm = ["anthropic"]
+dev = ["pytest", "hypothesis"]
+
+[tool.setuptools.packages.find]
+include = ["quantum_resilience_framework*"]
