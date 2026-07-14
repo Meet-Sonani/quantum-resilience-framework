@@ -7,3 +7,4 @@ venv/
 report.md
 *-policy-briefing.json
 CLAUDE.md
+!examples/sample-policy-briefing.json
