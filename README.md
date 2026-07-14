@@ -1,5 +1,7 @@
 # quantum-resilience-framework
 
+[![Tests](https://github.com/Meet-Sonani/quantum-resilience-framework/actions/workflows/tests.yml/badge.svg)](https://github.com/Meet-Sonani/quantum-resilience-framework/actions)
+
 Assess quantum vulnerability across a real cryptographic asset inventory and
 produce a prioritised, explainable post-quantum migration report.
 
@@ -38,6 +40,9 @@ genuine engineering problem rather than a one-line equation.
 ```bash
 pip install -e .                    # core install
 pip install -e ".[llm]"             # + the optional LLM policy agent
+pip install -e ".[dev]"             # + pytest/hypothesis, needed to run the test suite
+# or, all at once:
+pip install -e ".[llm,dev]"
 
 qrf examples/healthcare-iot-inventory.json --output report.md
 ```
@@ -128,6 +133,8 @@ METHODOLOGY.md          full scoring rationale and known limitations
 ---
 
 ## Testing
+
+Requires the `dev` extra (`pip install -e ".[dev]"`) for pytest and hypothesis.
 
 ```bash
 pytest tests/ -v
